@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "3.25.0"
     }
   }
@@ -9,7 +9,7 @@ terraform {
 
 provider "aws" {
   profile = "cloudcasts"
-  region = "us-east-2"
+  region  = "us-east-2"
 }
 
 data "aws_ami" "app" {
@@ -46,4 +46,31 @@ resource "aws_instance" "cloudcasts_web" {
     volume_size = 8 # GB
     volume_type = "gp3"
   }
+
+  tags = {
+    Name        = "cloudcasts-staging-web"
+    Project     = "cloudcasts.io"
+    Environment = "staging"
+    ManagedBy   = "terraform"
+  }
+}
+
+resource "aws_eip" "app_eip" {
+  vpc = true
+
+//  lifecycle {
+//    prevent_destroy = true
+//  }
+
+  tags = {
+    Name        = "cloudcasts-staging-web-address"
+    Project     = "cloudcasts.io"
+    Environment = "staging"
+    ManagedBy   = "terraform"
+  }
+}
+
+resource "aws_eip_association" "app_eip_assoc" {
+  instance_id   = aws_instance.cloudcasts_web.id
+  allocation_id = aws_eip.app_eip.id
 }
