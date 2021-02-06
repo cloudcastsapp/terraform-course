@@ -12,6 +12,24 @@ provider "aws" {
   region  = "us-east-2"
 }
 
+variable infra_env {
+  type = string
+  description = "infrastructure environment"
+}
+
+variable default_region {
+  type = string
+  description = "the region this infrastructure is in"
+  default = "us-east-2"
+}
+
+variable instance_size {
+  type = string
+  description = "ec2 web server size"
+  default = "t3.small"
+}
+
+
 data "aws_ami" "app" {
   most_recent = true
 
@@ -32,7 +50,7 @@ data "aws_ami" "app" {
 
   filter {
     name   = "tag:Environment"
-    values = ["staging"]
+    values = [var.infra_env]
   }
 
   owners = ["self"]
@@ -40,17 +58,21 @@ data "aws_ami" "app" {
 
 resource "aws_instance" "cloudcasts_web" {
   ami           = data.aws_ami.app.id
-  instance_type = "t3.small"
+  instance_type = var.instance_size
 
   root_block_device {
     volume_size = 8 # GB
     volume_type = "gp3"
   }
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = {
-    Name        = "cloudcasts-staging-web"
+    Name        = "cloudcasts-${var.infra_env}-web"
     Project     = "cloudcasts.io"
-    Environment = "staging"
+    Environment = var.infra_env
     ManagedBy   = "terraform"
   }
 }
@@ -58,14 +80,14 @@ resource "aws_instance" "cloudcasts_web" {
 resource "aws_eip" "app_eip" {
   vpc = true
 
-//  lifecycle {
-//    prevent_destroy = true
-//  }
+  lifecycle {
+    prevent_destroy = true
+  }
 
   tags = {
-    Name        = "cloudcasts-staging-web-address"
+    Name        = "cloudcasts-${var.infra_env}-web-address"
     Project     = "cloudcasts.io"
-    Environment = "staging"
+    Environment = var.infra_env
     ManagedBy   = "terraform"
   }
 }
