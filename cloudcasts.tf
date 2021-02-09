@@ -5,6 +5,14 @@ terraform {
       version = "3.25.0"
     }
   }
+
+  backend "s3" {
+    bucket = "terraform-course-cloudcasts"
+    key    = "cloudcasts/terraform.tfstate"
+    profile = "cloudcasts"
+    region  = "us-east-2"
+    dynamodb_table = "cloudcasts-terraform-course"
+  }
 }
 
 provider "aws" {
