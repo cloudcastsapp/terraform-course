@@ -31,12 +31,6 @@ variable default_region {
   default = "us-east-2"
 }
 
-variable instance_size {
-  type = string
-  description = "ec2 web server size"
-  default = "t3.small"
-}
-
 
 data "aws_ami" "app" {
   most_recent = true
@@ -64,43 +58,22 @@ data "aws_ami" "app" {
   owners = ["self"]
 }
 
-resource "aws_instance" "cloudcasts_web" {
-  ami           = data.aws_ami.app.id
-  instance_type = var.instance_size
+module "ec2_app" {
+  source = "./modules/ec2"
 
-  root_block_device {
-    volume_size = 8 # GB
-    volume_type = "gp3"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags = {
-    Name        = "cloudcasts-${var.infra_env}-web"
-    Project     = "cloudcasts.io"
-    Environment = var.infra_env
-    ManagedBy   = "terraform"
-  }
+  infra_env = var.infra_env
+  infra_role = "web"
+  instance_size = "t3.small"
+  instance_ami = data.aws_ami.app.id
+  # instance_root_device_size = 12
 }
 
-resource "aws_eip" "app_eip" {
-  vpc = true
+module "ec2_worker" {
+  source = "./modules/ec2"
 
-  lifecycle {
-    prevent_destroy = true
-  }
-
-  tags = {
-    Name        = "cloudcasts-${var.infra_env}-web-address"
-    Project     = "cloudcasts.io"
-    Environment = var.infra_env
-    ManagedBy   = "terraform"
-  }
-}
-
-resource "aws_eip_association" "app_eip_assoc" {
-  instance_id   = aws_instance.cloudcasts_web.id
-  allocation_id = aws_eip.app_eip.id
+  infra_env = var.infra_env
+  infra_role = "worker"
+  instance_size = "t3.large"
+  instance_ami = data.aws_ami.app.id
+  instance_root_device_size = 20
 }
