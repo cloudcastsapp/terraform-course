@@ -24,3 +24,14 @@ variable instance_root_device_size {
   description = "Root bock device size in GB"
   default = 12
 }
+
+variable subnets {
+  type = list(string)
+  description = "valid subnets to assign to server"
+}
+
+variable security_groups {
+  type = list(string)
+  description = "security groups to assign to server"
+  default = []
+}

@@ -66,6 +66,8 @@ module "ec2_app" {
   instance_size = "t3.small"
   instance_ami = data.aws_ami.app.id
   # instance_root_device_size = 12
+  subnets = keys(module.vpc.vpc_public_subnets)
+  # security_groups = []
 }
 
 module "ec2_worker" {
@@ -76,6 +78,8 @@ module "ec2_worker" {
   instance_size = "t3.large"
   instance_ami = data.aws_ami.app.id
   instance_root_device_size = 20
+  subnets = keys(module.vpc.vpc_private_subnets)
+  # security_groups = []
 }
 
 module "vpc" {
