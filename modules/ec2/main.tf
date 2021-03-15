@@ -19,16 +19,20 @@ resource "aws_instance" "cloudcasts_web" {
     create_before_destroy = true
   }
 
-  tags = {
-    Name        = "cloudcasts-${var.infra_env}-web"
-    Role        = var.infra_role
-    Project     = "cloudcasts.io"
-    Environment = var.infra_env
-    ManagedBy   = "terraform"
-  }
+  tags = merge(
+    {
+      Name        = "cloudcasts-${var.infra_env}"
+      Role        = var.infra_role
+      Project     = "cloudcasts.io"
+      Environment = var.infra_env
+      ManagedBy   = "terraform"
+    },
+    var.tags
+  )
 }
 
 resource "aws_eip" "cloudcasts_addr" {
+  count = (var.create_eip) ? 1 : 0
   # We're not doing this directly
   # instance = aws_instance.cloudcasts_web.id
   vpc      = true
@@ -47,6 +51,8 @@ resource "aws_eip" "cloudcasts_addr" {
 }
 
 resource "aws_eip_association" "eip_assoc" {
+  count = (var.create_eip) ? 1 : 0
+
   instance_id   = aws_instance.cloudcasts_web.id
-  allocation_id = aws_eip.cloudcasts_addr.id
+  allocation_id = aws_eip.cloudcasts_addr[0].id
 }

@@ -1,5 +1,5 @@
 output "app_eip" {
-  value = aws_eip.cloudcasts_addr.public_ip
+  value = aws_eip.cloudcasts_addr.*.public_ip
 }
 
 output "app_instance" {

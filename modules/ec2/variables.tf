@@ -35,3 +35,15 @@ variable security_groups {
   description = "security groups to assign to server"
   default = []
 }
+
+variable "tags" {
+  type = map(string)
+  default = {}
+  description = "tags for the ec2 instance"
+}
+
+variable "create_eip" {
+  type = bool
+  default = false
+  description = "whether or create an EIP for the ec2 instance or not"
+}
