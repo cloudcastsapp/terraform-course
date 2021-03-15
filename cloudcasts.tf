@@ -77,3 +77,10 @@ module "ec2_worker" {
   instance_ami = data.aws_ami.app.id
   instance_root_device_size = 20
 }
+
+module "vpc" {
+  source = "./modules/vpc"
+
+  infra_env = var.infra_env
+  vpc_cidr = "10.0.0.0/17"
+}
