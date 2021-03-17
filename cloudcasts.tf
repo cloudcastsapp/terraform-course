@@ -66,7 +66,7 @@ module "ec2_app" {
   instance_size = "t3.small"
   instance_ami = data.aws_ami.app.id
   # instance_root_device_size = 12
-  subnets = keys(module.vpc.vpc_public_subnets)
+  subnets = module.vpc.vpc_public_subnets
   security_groups = [module.vpc.security_group_public]
   tags = {
     Name = "cloudcasts-${var.infra_env}-web"
@@ -82,7 +82,7 @@ module "ec2_worker" {
   instance_size = "t3.large"
   instance_ami = data.aws_ami.app.id
   instance_root_device_size = 20
-  subnets = keys(module.vpc.vpc_private_subnets)
+  subnets = module.vpc.vpc_private_subnets
   security_groups = [module.vpc.security_group_private]
   tags = {
     Name = "cloudcasts-${var.infra_env}-worker"
@@ -95,4 +95,7 @@ module "vpc" {
 
   infra_env = var.infra_env
   vpc_cidr = "10.0.0.0/17"
+  azs = ["us-east-2a", "us-east-2b", "us-east-2c"]
+  public_subnets = slice(cidrsubnets("10.0.0.0/17", 4, 4, 4, 4, 4, 4), 0, 3)
+  private_subnets = slice(cidrsubnets("10.0.0.0/17", 4, 4, 4, 4, 4, 4), 3, 6)
 }
