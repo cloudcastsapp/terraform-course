@@ -3,31 +3,33 @@ resource "random_shuffle" "subnets" {
   result_count = 1
 }
 
-resource "aws_instance" "cloudcasts_web" {
-  ami           = var.instance_ami
-  instance_type = var.instance_size
+# https://registry.terraform.io/modules/terraform-aws-modules/ec2-instance/aws/latest
+module "ec2-instance" {
+  source  = "terraform-aws-modules/ec2-instance/aws"
+  version = "2.17.0"
 
-  root_block_device {
+  # insert the 10 required variables here
+  name = "cloudcasts-${var.infra_env}"
+
+  ami                    = var.instance_ami
+  instance_type          = var.instance_size
+  vpc_security_group_ids = var.security_groups
+  subnet_id = random_shuffle.subnets.result[0]
+
+  root_block_device = [{
     volume_size = var.instance_root_device_size
     volume_type = "gp3"
-  }
-
-  subnet_id = random_shuffle.subnets.result[0]
-  vpc_security_group_ids = var.security_groups
-
-  lifecycle {
-    create_before_destroy = true
-  }
+  }]
 
   tags = merge(
-    {
-      Name        = "cloudcasts-${var.infra_env}"
-      Role        = var.infra_role
-      Project     = "cloudcasts.io"
-      Environment = var.infra_env
-      ManagedBy   = "terraform"
-    },
-    var.tags
+  {
+    Name        = "cloudcasts-${var.infra_env}"
+    Role        = var.infra_role
+    Project     = "cloudcasts.io"
+    Environment = var.infra_env
+    ManagedBy   = "terraform"
+  },
+  var.tags
   )
 }
 
@@ -38,7 +40,7 @@ resource "aws_eip" "cloudcasts_addr" {
   vpc      = true
 
   lifecycle {
-    prevent_destroy = true
+    # prevent_destroy = true
   }
 
   tags = {
@@ -53,6 +55,6 @@ resource "aws_eip" "cloudcasts_addr" {
 resource "aws_eip_association" "eip_assoc" {
   count = (var.create_eip) ? 1 : 0
 
-  instance_id   = aws_instance.cloudcasts_web.id
+  instance_id   = module.ec2-instance.id[0]
   allocation_id = aws_eip.cloudcasts_addr[0].id
 }

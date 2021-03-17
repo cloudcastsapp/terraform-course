@@ -3,5 +3,5 @@ output "app_eip" {
 }
 
 output "app_instance" {
-  value = aws_instance.cloudcasts_web.id
+  value = module.ec2-instance.id[0]
 }
