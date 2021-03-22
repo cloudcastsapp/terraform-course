@@ -15,14 +15,13 @@ terraform {
   }
 }
 
+locals {
+  infra_env = terraform.workspace
+}
+
 provider "aws" {
   profile = "cloudcasts"
   region  = "us-east-2"
-}
-
-variable infra_env {
-  type = string
-  description = "infrastructure environment"
 }
 
 variable default_region {
@@ -52,7 +51,7 @@ data "aws_ami" "app" {
 
   filter {
     name   = "tag:Environment"
-    values = [var.infra_env]
+    values = ["staging"]
   }
 
   owners = ["self"]
@@ -61,7 +60,7 @@ data "aws_ami" "app" {
 module "ec2_app" {
   source = "./modules/ec2"
 
-  infra_env = var.infra_env
+  infra_env = local.infra_env
   infra_role = "web"
   instance_size = "t3.small"
   instance_ami = data.aws_ami.app.id
@@ -69,7 +68,7 @@ module "ec2_app" {
   subnets = module.vpc.vpc_public_subnets
   security_groups = [module.vpc.security_group_public]
   tags = {
-    Name = "cloudcasts-${var.infra_env}-web"
+    Name = "cloudcasts-${local.infra_env}-web"
   }
   create_eip = true
 }
@@ -77,7 +76,7 @@ module "ec2_app" {
 module "ec2_worker" {
   source = "./modules/ec2"
 
-  infra_env = var.infra_env
+  infra_env = local.infra_env
   infra_role = "worker"
   instance_size = "t3.large"
   instance_ami = data.aws_ami.app.id
@@ -85,7 +84,7 @@ module "ec2_worker" {
   subnets = module.vpc.vpc_private_subnets
   security_groups = [module.vpc.security_group_private]
   tags = {
-    Name = "cloudcasts-${var.infra_env}-worker"
+    Name = "cloudcasts-${local.infra_env}-worker"
   }
   create_eip = false
 }
@@ -93,7 +92,7 @@ module "ec2_worker" {
 module "vpc" {
   source = "./modules/vpc"
 
-  infra_env = var.infra_env
+  infra_env = local.infra_env
   vpc_cidr = "10.0.0.0/17"
   azs = ["us-east-2a", "us-east-2b", "us-east-2c"]
   public_subnets = slice(cidrsubnets("10.0.0.0/17", 4, 4, 4, 4, 4, 4), 0, 3)
