@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 TF_ENV=$1 # staging, production, etc
+TF_STATE=$2 # network, data, compute
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -8,12 +9,19 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
 
 if [ $# -gt 0 ]; then
-    if [ "$2" == "init" ]; then
-        terraform -chdir=./$TF_ENV init -backend-config=../backend-$TF_ENV.tf
+
+    if [ ! -d "$TF_ENV/$TF_STATE" ]; then
+        >&2 echo "Directory $DIR/$TF_ENV/$TF_STATE" does not exist
+        exit 1
+    fi
+
+    if [ "$3" == "init" ]; then
+        terraform -chdir=./$TF_ENV/$TF_STATE init \
+          -backend-config="bucket=terraform-course-cloudcasts" \
+          -backend-config="key=$TF_ENV/$TF_STATE.tfstate"
     else
-        terraform -chdir=./$TF_ENV $2
+        terraform -chdir=./$TF_ENV/$TF_STATE $3
     fi
 fi
-
 # Head back to original location to avoid surprises
 cd -

@@ -15,11 +15,24 @@ module "vpc" {
 
   private_subnets = var.private_subnets
   public_subnets  = var.public_subnets
+  database_subnets = var.database_subnets
 
   tags = {
     Name = "cloudcasts-${var.infra_env}-vpc"
     Project = "cloudcasts.io"
     Environment = var.infra_env
     ManagedBy = "terraform"
+  }
+
+  private_subnet_tags = {
+    Role = "private"
+  }
+
+  public_subnet_tags = {
+    Role = "public"
+  }
+
+  database_subnet_tags = {
+    Role = "database"
   }
 }
